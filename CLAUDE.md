@@ -170,6 +170,11 @@ uvicorn main:app --reload   # http://localhost:8000
 ### Not started
 - Backend (`backend/`) — FastAPI scaffold, database, auth, call orchestration, AI pipeline, real API integration
 
+### Deployment
+- GitHub: https://github.com/Nihal108-bi/WellRing (main branch)
+- Vercel: deploy frontend only — set Root Directory = `frontend` in project settings
+- ESLint config updated: `react/no-unescaped-entities` off, `allowTernary: true` for no-unused-expressions
+
 ### Next up
 - Scaffold `backend/` with FastAPI, Pydantic models, and a basic auth router
 - Wire frontend dashboard to real API endpoints (replace mock data)
