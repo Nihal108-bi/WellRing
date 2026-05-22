@@ -1,0 +1,41 @@
+# ── Claude Code internal ──────────────────────────────────────────
+.claude/
+
+# ── OS ────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor ────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Frontend (Next.js) — detailed rules live in frontend/.gitignore
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env*.local
+frontend/.vercel
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# ── Backend (FastAPI — not yet created) ───────────────────────────
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+backend/**/*.pyc
+backend/.venv/
+backend/venv/
+backend/.env
+backend/.env.*
+backend/alembic/versions/*.py
+
+# ── Secrets / credentials ─────────────────────────────────────────
+*.pem
+*.key
+.env
+.env.*
+!.env.example
