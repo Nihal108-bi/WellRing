@@ -7,7 +7,7 @@ import {
   Camera, Phone, Globe, Clock, Video, X, AlertCircle,
 } from "lucide-react";
 
-type Plan = "basic" | "family" | "family_plus" | "premium";
+type Plan = "trial_family" | "basic" | "family" | "family_plus" | "premium";
 
 interface FormData {
   seniorName: string;
@@ -18,9 +18,19 @@ interface FormData {
 }
 
 const PLANS: {
-  id: Plan; name: string; price: string; badge?: string;
+  id: Plan; name: string; price: string; badge?: string; note?: string;
   features: { label: string; included: boolean }[];
 }[] = [
+  {
+    id: "trial_family", name: "Free Trial", price: "₹0 / 14 days",
+    note: "Card required on day 7",
+    features: [
+      { label: "All Family features", included: true },
+      { label: "Voice clone (1 member)", included: true },
+      { label: "Smart alerts", included: true },
+      { label: "Video avatar", included: false },
+    ],
+  },
   {
     id: "basic", name: "Basic", price: "₹599/mo",
     features: [
@@ -37,17 +47,14 @@ const PLANS: {
     features: [
       { label: "Everything in Basic", included: true },
       { label: "Voice clone (1 member)", included: true },
-      { label: "Weekly AI video", included: true },
-      { label: "Family+ video avatar", included: false },
-      { label: "Daily video option", included: false },
+      { label: "Video avatar calls", included: false },
     ],
   },
   {
     id: "family_plus", name: "Family+", price: "₹1,999/mo",
     features: [
       { label: "Everything in Family", included: true },
-      { label: "Video avatar clone", included: true },
-      { label: "Daily video option", included: true },
+      { label: "Weekly video avatar call", included: true },
       { label: "Multiple voices", included: false },
       { label: "Doctor export", included: false },
     ],
@@ -214,10 +221,10 @@ function Step2({
       <div className="mb-7">
         <span className="tracking-[0.2em] text-[9px] uppercase text-emerald-400 font-medium block mb-3">Step 2 of setup</span>
         <h2 className="text-2xl text-white mb-1.5" style={{ fontFamily: "var(--font-dm-serif)" }}>Choose your plan</h2>
-        <p className="text-sm text-white/45">All plans include a 14-day free trial. No credit card required.</p>
+        <p className="text-sm text-white/45">Start with a 14-day free trial, or pick a paid plan below.</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {PLANS.map((plan) => {
           const sel = selectedPlan === plan.id;
           return (
@@ -239,6 +246,7 @@ function Step2({
                 <div>
                   <p className="text-sm font-medium text-white">{plan.name}</p>
                   <p className="text-xs text-emerald-400 font-medium mt-0.5">{plan.price}</p>
+                  {plan.note && <p className="text-[10px] text-white/35 mt-0.5">{plan.note}</p>}
                 </div>
                 <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${sel ? "border-emerald-400 bg-emerald-400" : "border-white/20"}`}>
                   {sel && <div className="w-1.5 h-1.5 rounded-full bg-[#0d1510]" />}
