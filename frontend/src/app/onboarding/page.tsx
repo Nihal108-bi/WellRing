@@ -3,22 +3,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import {
-  Mic,
-  Upload,
-  Check,
-  ChevronRight,
-  Play,
-  Square,
-  Camera,
-  Phone,
-  Globe,
-  Clock,
-  Video,
-  X,
-  AlertCircle,
+  Mic, Upload, Check, ChevronRight, Play, Square,
+  Camera, Phone, Globe, Clock, Video, X, AlertCircle,
 } from "lucide-react";
-
-// ─── TYPES ────────────────────────────────────────────────────────────────────
 
 type Plan = "basic" | "family" | "family_plus" | "premium";
 
@@ -30,19 +17,12 @@ interface FormData {
   callTime: string;
 }
 
-// ─── PLAN CONFIG ─────────────────────────────────────────────────────────────
-
 const PLANS: {
-  id: Plan;
-  name: string;
-  price: string;
-  badge?: string;
+  id: Plan; name: string; price: string; badge?: string;
   features: { label: string; included: boolean }[];
 }[] = [
   {
-    id: "basic",
-    name: "Basic",
-    price: "₹599/mo",
+    id: "basic", name: "Basic", price: "₹599/mo",
     features: [
       { label: "Daily AI call", included: true },
       { label: "Dashboard", included: true },
@@ -53,10 +33,7 @@ const PLANS: {
     ],
   },
   {
-    id: "family",
-    name: "Family",
-    price: "₹1,499/mo",
-    badge: "MOST POPULAR",
+    id: "family", name: "Family", price: "₹1,499/mo", badge: "MOST POPULAR",
     features: [
       { label: "Everything in Basic", included: true },
       { label: "Voice clone (1 member)", included: true },
@@ -66,9 +43,7 @@ const PLANS: {
     ],
   },
   {
-    id: "family_plus",
-    name: "Family+",
-    price: "₹1,999/mo",
+    id: "family_plus", name: "Family+", price: "₹1,999/mo",
     features: [
       { label: "Everything in Family", included: true },
       { label: "Video avatar clone", included: true },
@@ -78,9 +53,7 @@ const PLANS: {
     ],
   },
   {
-    id: "premium",
-    name: "Premium",
-    price: "₹2,999/mo",
+    id: "premium", name: "Premium", price: "₹2,999/mo",
     features: [
       { label: "Everything in Family+", included: true },
       { label: "Multiple voices", included: true },
@@ -91,12 +64,8 @@ const PLANS: {
   },
 ];
 
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-
 function formatTime(secs: number) {
-  const m = Math.floor(secs / 60)
-    .toString()
-    .padStart(2, "0");
+  const m = Math.floor(secs / 60).toString().padStart(2, "0");
   const s = (secs % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
 }
@@ -107,72 +76,61 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// ─── STEPPER ─────────────────────────────────────────────────────────────────
+// ── shared styles ────────────────────────────────────────────────────────────
 
-interface StepperProps {
-  steps: string[];
-  current: number;
-}
+const btnCoral =
+  "inline-flex items-center justify-center gap-2 rounded-full font-medium text-sm transition-all duration-200 px-8 py-3.5 bg-[#d85a30] text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-orange-900/40 hover:bg-[#c24e28] active:translate-y-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none";
+const btnGhost =
+  "inline-flex items-center justify-center gap-2 rounded-full font-medium text-sm transition-all duration-200 px-5 py-3 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/5 hover:-translate-y-0.5 active:translate-y-0";
+const inputCls =
+  "w-full px-4 py-2.5 rounded-[10px] bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition";
+const selectCls = `${inputCls} appearance-none`;
+const labelCls = "text-[10px] tracking-[0.12em] uppercase font-medium text-white/40 block mb-1.5";
 
-function Stepper({ steps, current }: StepperProps) {
+// ── Stepper ──────────────────────────────────────────────────────────────────
+
+function Stepper({ steps, current }: { steps: string[]; current: number }) {
+  const pct = steps.length > 1 ? (current / (steps.length - 1)) * 100 : 100;
   return (
-    <div className="flex items-center justify-center gap-0 mb-10 overflow-x-auto pb-1">
-      {steps.map((label, i) => {
-        const done = i < current;
-        const active = i === current;
-        return (
-          <React.Fragment key={label}>
-            <div className="flex flex-col items-center gap-1.5 min-w-[64px]">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all ${
-                  done
-                    ? "bg-[#1a6b55] text-white"
-                    : active
-                    ? "bg-[#1a6b55] text-white ring-4 ring-[#e1f5ee] dark:ring-[#1e2820]"
-                    : "bg-[#f0eff0] dark:bg-[#2a2a2a] text-[#aaa]"
-                }`}
-              >
-                {done ? <Check size={13} strokeWidth={3} /> : i + 1}
-              </div>
-              <span
-                className={`text-[10px] text-center leading-tight ${
-                  active
-                    ? "text-[#1a6b55] dark:text-[#2d9574] font-medium"
-                    : done
-                    ? "text-[#1a6b55] dark:text-[#2d9574]"
-                    : "text-[#aaa]"
-                }`}
-              >
-                {label}
-              </span>
-            </div>
-            {i < steps.length - 1 && (
-              <div
-                className={`h-px w-8 flex-shrink-0 mb-5 transition-colors ${
-                  i < current
-                    ? "bg-[#1a6b55] dark:bg-[#2d9574]"
-                    : "bg-[rgba(0,0,0,0.1)] dark:bg-[rgba(255,255,255,0.1)]"
-                }`}
-              />
-            )}
-          </React.Fragment>
-        );
-      })}
+    <div className="mb-10">
+      <div className="relative h-[2px] bg-white/10 rounded-full mb-4">
+        <div
+          className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${pct}%` }}
+        />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.15)] transition-all duration-500 ease-out"
+          style={{ left: `${Math.min(pct, 98)}%` }}
+        />
+      </div>
+      <div className="flex justify-between">
+        {steps.map((label, i) => (
+          <span
+            key={label}
+            className={`text-[9px] tracking-[0.15em] uppercase font-medium transition-colors duration-300 ${
+              i === current ? "text-emerald-400" : i < current ? "text-emerald-700" : "text-white/20"
+            }`}
+          >
+            {label}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
 
-// ─── STEP 1: SENIOR INFO ──────────────────────────────────────────────────────
+// ── Step 1: Senior Info ──────────────────────────────────────────────────────
 
-interface Step1Props {
+function Step1({
+  formData, setFormData, onNext,
+}: {
   formData: FormData;
   setFormData: React.Dispatch<React.SetStateAction<FormData>>;
   onNext: () => void;
-}
-
-function Step1({ formData, setFormData, onNext }: Step1Props) {
-  const set = (key: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setFormData((prev) => ({ ...prev, [key]: e.target.value }));
+}) {
+  const set = (k: keyof FormData) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setFormData((p) => ({ ...p, [k]: e.target.value }));
 
   const valid =
     formData.seniorName.trim() &&
@@ -184,205 +142,113 @@ function Step1({ formData, setFormData, onNext }: Step1Props) {
   return (
     <div className="animate-slide-up">
       <div className="mb-7">
-        <h2
-          className="text-2xl text-[#1a1a18] dark:text-[#f0efe9] mb-1.5"
-          style={{ fontFamily: "var(--font-dm-serif)" }}
-        >
+        <span className="tracking-[0.2em] text-[9px] uppercase text-emerald-400 font-medium block mb-3">Step 1 of setup</span>
+        <h2 className="text-2xl text-white mb-1.5" style={{ fontFamily: "var(--font-dm-serif)" }}>
           Who are you caring for?
         </h2>
-        <p className="text-sm text-[#555550] dark:text-[#888884]">
-          Tell us a little about your senior so we can personalise every call.
+        <p className="text-sm text-white/45 leading-relaxed">
+          Tell us about your senior — every call is personalised around these details.
         </p>
       </div>
 
       <div className="space-y-4">
-        {/* Senior name */}
         <div>
-          <label className="block text-xs font-medium text-[#555550] dark:text-[#aaa] mb-1.5">
-            Senior's name
-          </label>
-          <input
-            type="text"
-            placeholder="e.g. Meera Nair"
-            value={formData.seniorName}
-            onChange={set("seniorName")}
-            className="w-full px-4 py-2.5 rounded-[10px] border border-[rgba(0,0,0,0.1)] dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[#1c1d1b] text-sm text-[#1a1a18] dark:text-[#f0efe9] placeholder:text-[#bbb] focus:outline-none focus:ring-2 focus:ring-[#1a6b55]/30 dark:focus:ring-[#2d9574]/30 transition"
-          />
+          <label className={labelCls}>Senior's name</label>
+          <input type="text" placeholder="e.g. Meera Nair" value={formData.seniorName} onChange={set("seniorName")} className={inputCls} />
         </div>
-
-        {/* Phone */}
         <div>
-          <label className="block text-xs font-medium text-[#555550] dark:text-[#aaa] mb-1.5">
-            Phone number
-          </label>
+          <label className={labelCls}>Phone number</label>
           <div className="flex">
-            <span className="px-3 flex items-center rounded-l-[10px] border border-r-0 border-[rgba(0,0,0,0.1)] dark:border-[rgba(255,255,255,0.1)] bg-[#f7f6f3] dark:bg-[#222321] text-sm text-[#555550] dark:text-[#888884] select-none">
-              +91
-            </span>
-            <input
-              type="tel"
-              placeholder="98765 43210"
-              value={formData.phone}
-              onChange={set("phone")}
-              className="flex-1 px-4 py-2.5 rounded-r-[10px] border border-[rgba(0,0,0,0.1)] dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[#1c1d1b] text-sm text-[#1a1a18] dark:text-[#f0efe9] placeholder:text-[#bbb] focus:outline-none focus:ring-2 focus:ring-[#1a6b55]/30 dark:focus:ring-[#2d9574]/30 transition"
-            />
+            <span className="px-3 flex items-center rounded-l-[10px] border border-r-0 border-white/10 bg-white/5 text-sm text-white/30 select-none">+91</span>
+            <input type="tel" placeholder="98765 43210" value={formData.phone} onChange={set("phone")}
+              className="flex-1 px-4 py-2.5 rounded-r-[10px] bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40 transition" />
           </div>
         </div>
-
-        {/* City */}
         <div>
-          <label className="block text-xs font-medium text-[#555550] dark:text-[#aaa] mb-1.5">
-            City
-          </label>
-          <input
-            type="text"
-            placeholder="e.g. Chennai"
-            value={formData.city}
-            onChange={set("city")}
-            className="w-full px-4 py-2.5 rounded-[10px] border border-[rgba(0,0,0,0.1)] dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[#1c1d1b] text-sm text-[#1a1a18] dark:text-[#f0efe9] placeholder:text-[#bbb] focus:outline-none focus:ring-2 focus:ring-[#1a6b55]/30 dark:focus:ring-[#2d9574]/30 transition"
-          />
+          <label className={labelCls}>City</label>
+          <input type="text" placeholder="e.g. Chennai" value={formData.city} onChange={set("city")} className={inputCls} />
         </div>
-
-        {/* Language + Call time (row) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-[#555550] dark:text-[#aaa] mb-1.5 flex items-center gap-1.5">
-              <Globe size={12} /> Language
-            </label>
-            <select
-              value={formData.language}
-              onChange={set("language")}
-              className="w-full px-4 py-2.5 rounded-[10px] border border-[rgba(0,0,0,0.1)] dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[#1c1d1b] text-sm text-[#1a1a18] dark:text-[#f0efe9] focus:outline-none focus:ring-2 focus:ring-[#1a6b55]/30 dark:focus:ring-[#2d9574]/30 transition"
-            >
-              <option value="">Select language</option>
-              <option value="english">English</option>
-              <option value="hindi">Hindi</option>
-              <option value="hinglish">Hinglish</option>
-              <option value="tamil">Tamil</option>
-              <option value="telugu">Telugu</option>
-              <option value="other">Other</option>
+            <label className={`flex items-center gap-1 ${labelCls}`}><Globe size={9} /> Language</label>
+            <select value={formData.language} onChange={set("language")} className={selectCls}>
+              <option value="" style={{ background: "#111210" }}>Select language</option>
+              {["English","Hindi","Hinglish","Tamil","Telugu","Other"].map((l) => (
+                <option key={l} value={l.toLowerCase()} style={{ background: "#111210" }}>{l}</option>
+              ))}
             </select>
           </div>
-
           <div>
-            <label className="block text-xs font-medium text-[#555550] dark:text-[#aaa] mb-1.5 flex items-center gap-1.5">
-              <Clock size={12} /> Preferred call time
-            </label>
-            <select
-              value={formData.callTime}
-              onChange={set("callTime")}
-              className="w-full px-4 py-2.5 rounded-[10px] border border-[rgba(0,0,0,0.1)] dark:border-[rgba(255,255,255,0.1)] bg-white dark:bg-[#1c1d1b] text-sm text-[#1a1a18] dark:text-[#f0efe9] focus:outline-none focus:ring-2 focus:ring-[#1a6b55]/30 dark:focus:ring-[#2d9574]/30 transition"
-            >
-              <option value="">Select time</option>
-              <option value="06:00">6:00 AM</option>
-              <option value="06:30">6:30 AM</option>
-              <option value="07:00">7:00 AM</option>
-              <option value="07:30">7:30 AM</option>
-              <option value="08:00">8:00 AM</option>
-              <option value="08:30">8:30 AM</option>
-              <option value="09:00">9:00 AM</option>
-              <option value="09:30">9:30 AM</option>
-              <option value="10:00">10:00 AM</option>
+            <label className={`flex items-center gap-1 ${labelCls}`}><Clock size={9} /> Preferred call time</label>
+            <select value={formData.callTime} onChange={set("callTime")} className={selectCls}>
+              <option value="" style={{ background: "#111210" }}>Select time</option>
+              {[["06:00","6:00 AM"],["06:30","6:30 AM"],["07:00","7:00 AM"],["07:30","7:30 AM"],
+                ["08:00","8:00 AM"],["08:30","8:30 AM"],["09:00","9:00 AM"],["09:30","9:30 AM"],["10:00","10:00 AM"]
+              ].map(([v, l]) => (
+                <option key={v} value={v} style={{ background: "#111210" }}>{l}</option>
+              ))}
             </select>
           </div>
         </div>
       </div>
 
-      <button
-        onClick={onNext}
-        disabled={!valid}
-        className="mt-7 w-full py-3 rounded-full bg-[#1a6b55] text-white text-sm font-medium hover:bg-[#134d3d] disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-      >
+      <button onClick={onNext} disabled={!valid} className={`${btnCoral} w-full mt-7`}>
         Continue <ChevronRight size={15} />
       </button>
     </div>
   );
 }
 
-// ─── STEP 2: CHOOSE PLAN ──────────────────────────────────────────────────────
+// ── Step 2: Choose Plan ──────────────────────────────────────────────────────
 
-interface Step2Props {
+function Step2({
+  selectedPlan, setSelectedPlan, onNext, onBack,
+}: {
   selectedPlan: Plan;
   setSelectedPlan: (p: Plan) => void;
   onNext: () => void;
   onBack: () => void;
-}
-
-function Step2({ selectedPlan, setSelectedPlan, onNext, onBack }: Step2Props) {
+}) {
   return (
     <div className="animate-slide-up">
       <div className="mb-7">
-        <h2
-          className="text-2xl text-[#1a1a18] dark:text-[#f0efe9] mb-1.5"
-          style={{ fontFamily: "var(--font-dm-serif)" }}
-        >
-          Choose your plan
-        </h2>
-        <p className="text-sm text-[#555550] dark:text-[#888884]">
-          All plans include a 14-day free trial. No credit card required.
-        </p>
+        <span className="tracking-[0.2em] text-[9px] uppercase text-emerald-400 font-medium block mb-3">Step 2 of setup</span>
+        <h2 className="text-2xl text-white mb-1.5" style={{ fontFamily: "var(--font-dm-serif)" }}>Choose your plan</h2>
+        <p className="text-sm text-white/45">All plans include a 14-day free trial. No credit card required.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
         {PLANS.map((plan) => {
-          const selected = selectedPlan === plan.id;
+          const sel = selectedPlan === plan.id;
           return (
             <button
               key={plan.id}
               onClick={() => setSelectedPlan(plan.id)}
               className={`relative text-left rounded-[14px] p-4 transition-all border ${
-                selected
-                  ? "border-[#1a6b55] dark:border-[#2d9574] bg-[#f4faf7] dark:bg-[#1e2820] ring-2 ring-[#1a6b55]/20 dark:ring-[#2d9574]/20"
-                  : "border-[rgba(0,0,0,0.08)] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#1c1d1b] hover:border-[#1a6b55]/40 dark:hover:border-[#2d9574]/40"
+                sel
+                  ? "border-emerald-500/50 bg-emerald-950/40 ring-1 ring-emerald-500/20"
+                  : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
               }`}
             >
               {plan.badge && (
-                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-[#d85a30] text-white text-[9px] font-medium whitespace-nowrap">
+                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-[#d85a30] text-white text-[9px] tracking-wide font-medium whitespace-nowrap">
                   {plan.badge}
                 </span>
               )}
-
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <p className="text-sm font-medium text-[#1a1a18] dark:text-[#f0efe9]">
-                    {plan.name}
-                  </p>
-                  <p className="text-xs text-[#1a6b55] dark:text-[#2d9574] font-medium mt-0.5">
-                    {plan.price}
-                  </p>
+                  <p className="text-sm font-medium text-white">{plan.name}</p>
+                  <p className="text-xs text-emerald-400 font-medium mt-0.5">{plan.price}</p>
                 </div>
-                <div
-                  className={`w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5 ${
-                    selected
-                      ? "border-[#1a6b55] dark:border-[#2d9574] bg-[#1a6b55] dark:bg-[#2d9574]"
-                      : "border-[rgba(0,0,0,0.2)] dark:border-[rgba(255,255,255,0.2)]"
-                  }`}
-                >
-                  {selected && (
-                    <div className="w-full h-full rounded-full flex items-center justify-center">
-                      <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                    </div>
-                  )}
+                <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${sel ? "border-emerald-400 bg-emerald-400" : "border-white/20"}`}>
+                  {sel && <div className="w-1.5 h-1.5 rounded-full bg-[#0d1510]" />}
                 </div>
               </div>
-
               <ul className="space-y-1.5">
                 {plan.features.map(({ label, included }) => (
                   <li key={label} className="flex items-center gap-1.5 text-xs">
-                    <span
-                      className={included ? "text-[#1a6b55] dark:text-[#2d9574]" : "text-[#ccc]"}
-                    >
-                      {included ? "✓" : "✗"}
-                    </span>
-                    <span
-                      className={
-                        included
-                          ? "text-[#555550] dark:text-[#aaa]"
-                          : "text-[#ccc] dark:text-[#555] line-through"
-                      }
-                    >
-                      {label}
-                    </span>
+                    <span className={included ? "text-emerald-400" : "text-white/20"}>{included ? "✓" : "–"}</span>
+                    <span className={included ? "text-white/65" : "text-white/20 line-through"}>{label}</span>
                   </li>
                 ))}
               </ul>
@@ -392,32 +258,16 @@ function Step2({ selectedPlan, setSelectedPlan, onNext, onBack }: Step2Props) {
       </div>
 
       <div className="flex gap-3 mt-7">
-        <button
-          onClick={onBack}
-          className="px-5 py-3 rounded-full border border-[rgba(0,0,0,0.1)] dark:border-[rgba(255,255,255,0.1)] text-sm text-[#555550] dark:text-[#aaa] hover:bg-[#f7f6f3] dark:hover:bg-[#222321] transition-colors"
-        >
-          Back
-        </button>
-        <button
-          onClick={onNext}
-          className="flex-1 py-3 rounded-full bg-[#1a6b55] text-white text-sm font-medium hover:bg-[#134d3d] transition-all flex items-center justify-center gap-2"
-        >
-          Continue <ChevronRight size={15} />
-        </button>
+        <button onClick={onBack} className={btnGhost}>Back</button>
+        <button onClick={onNext} className={`${btnCoral} flex-1`}>Continue <ChevronRight size={15} /></button>
       </div>
     </div>
   );
 }
 
-// ─── STEP 3: VOICE CLONE ─────────────────────────────────────────────────────
+// ── Step 3: Voice Clone ──────────────────────────────────────────────────────
 
-interface Step3Props {
-  seniorName: string;
-  onNext: () => void;
-  onBack: () => void;
-}
-
-function Step3({ seniorName, onNext, onBack }: Step3Props) {
+function Step3({ seniorName, onNext, onBack }: { seniorName: string; onNext: () => void; onBack: () => void }) {
   const [consent, setConsent] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioError, setAudioError] = useState("");
@@ -426,308 +276,210 @@ function Step3({ seniorName, onNext, onBack }: Step3Props) {
   const [audioRecorded, setAudioRecorded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const MIN_DURATION_SECS = 120; // 2 minutes
+  const MIN_SECS = 120;
 
   const startRecording = useCallback(() => {
-    setIsRecording(true);
-    setRecordingTime(0);
-    setAudioRecorded(false);
-    timerRef.current = setInterval(() => {
-      setRecordingTime((t) => t + 1);
-    }, 1000);
+    setIsRecording(true); setRecordingTime(0); setAudioRecorded(false);
+    timerRef.current = setInterval(() => setRecordingTime((t) => t + 1), 1000);
   }, []);
 
   const stopRecording = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     setIsRecording(false);
-    if (recordingTime >= MIN_DURATION_SECS) {
-      setAudioRecorded(true);
-      setAudioError("");
-    } else {
-      setAudioError(`Recording is too short (${formatTime(recordingTime)}). Minimum 2 minutes required.`);
-    }
+    if (recordingTime >= MIN_SECS) { setAudioRecorded(true); setAudioError(""); }
+    else setAudioError(`Too short (${formatTime(recordingTime)}). Minimum 2 minutes required.`);
   }, [recordingTime]);
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, []);
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
 
-  const handleFileChange = (file: File | null) => {
+  const handleFile = (file: File | null) => {
     if (!file) return;
-    setAudioError("");
-    setAudioRecorded(false);
-    // Estimate duration: ~1MB per minute for typical voice audio at 128kbps
-    const estimatedSecs = (file.size / (128 * 1024 / 8));
-    if (estimatedSecs < MIN_DURATION_SECS) {
+    setAudioError(""); setAudioRecorded(false);
+    if (file.size / (128 * 1024 / 8) < MIN_SECS)
       setAudioError("File appears shorter than 2 minutes. Please provide a longer recording.");
-    }
     setAudioFile(file);
   };
 
   const canContinue = consent && (audioFile !== null || audioRecorded);
+  const staticWave = [8, 14, 10, 20, 16, 24, 12, 18, 22, 14, 10, 16, 8, 20, 14, 10];
 
   return (
     <div className="animate-slide-up">
       <div className="mb-6">
-        <h2
-          className="text-2xl text-[#1a1a18] dark:text-[#f0efe9] mb-1.5"
-          style={{ fontFamily: "var(--font-dm-serif)" }}
-        >
-          Record your voice clone
-        </h2>
-        <p className="text-sm text-[#555550] dark:text-[#888884] leading-relaxed">
+        <span className="tracking-[0.2em] text-[9px] uppercase text-emerald-400 font-medium block mb-3">Voice AI Setup</span>
+        <h2 className="text-2xl text-white mb-1.5" style={{ fontFamily: "var(--font-dm-serif)" }}>Record your voice clone</h2>
+        <p className="text-sm text-white/45 leading-relaxed">
           Your voice will make every call to{" "}
-          <span className="font-medium text-[#1a6b55] dark:text-[#2d9574]">
-            {seniorName || "your senior"}
-          </span>{" "}
+          <span className="text-emerald-400 font-medium">{seniorName || "your senior"}</span>{" "}
           feel warm and familiar. We need at least 2 minutes of clear speech.
         </p>
       </div>
 
-      {/* Consent */}
-      <label className="flex items-start gap-3 p-4 rounded-[10px] bg-[#f4faf7] dark:bg-[#1e2820] border border-[rgba(0,0,0,0.06)] dark:border-[rgba(255,255,255,0.06)] cursor-pointer mb-5">
+      <label className="flex items-start gap-3 p-4 rounded-[10px] bg-emerald-950/30 border border-emerald-900/40 cursor-pointer mb-5">
         <div
-          className={`w-5 h-5 rounded flex-shrink-0 mt-0.5 border-2 flex items-center justify-center transition-colors ${
-            consent
-              ? "bg-[#1a6b55] dark:bg-[#2d9574] border-[#1a6b55] dark:border-[#2d9574]"
-              : "border-[rgba(0,0,0,0.2)] dark:border-[rgba(255,255,255,0.2)]"
-          }`}
+          className={`w-5 h-5 rounded flex-shrink-0 mt-0.5 border-2 flex items-center justify-center transition-colors ${consent ? "bg-emerald-500 border-emerald-500" : "border-white/20"}`}
           onClick={() => setConsent(!consent)}
         >
           {consent && <Check size={11} strokeWidth={3} className="text-white" />}
         </div>
-        <p className="text-sm text-[#555550] dark:text-[#aaa] leading-relaxed">
+        <p className="text-sm text-white/50 leading-relaxed">
           I consent to my voice being cloned for daily check-in calls with{" "}
-          <span className="font-medium text-[#1a1a18] dark:text-[#f0efe9]">
-            {seniorName || "my senior"}
-          </span>{" "}
-          only, and not used for any other purpose.
+          <span className="font-medium text-white">{seniorName || "my senior"}</span> only.
         </p>
       </label>
 
-      {/* Two panels */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-        {/* Upload */}
+        {/* Upload panel */}
         <div>
-          <p className="text-xs font-medium text-[#555550] dark:text-[#aaa] mb-2 flex items-center gap-1.5">
-            <Upload size={12} /> Upload audio file
-          </p>
+          <p className={`flex items-center gap-1.5 ${labelCls}`}><Upload size={10} /> Upload audio</p>
           <div
-            className={`rounded-[12px] border-2 border-dashed p-6 flex flex-col items-center gap-3 cursor-pointer transition-colors ${
-              isDragging
-                ? "border-[#1a6b55] bg-[#f4faf7] dark:bg-[#1e2820]"
-                : audioFile
-                ? "border-[#1a6b55] bg-[#f4faf7] dark:bg-[#1e2820]"
-                : "border-[rgba(0,0,0,0.12)] dark:border-[rgba(255,255,255,0.12)] hover:border-[#1a6b55]/50 dark:hover:border-[#2d9574]/50"
+            className={`rounded-[14px] border-2 border-dashed p-5 flex flex-col items-center gap-3 cursor-pointer transition-all min-h-[148px] justify-center ${
+              isDragging || audioFile
+                ? "border-emerald-500/50 bg-emerald-950/30"
+                : "border-white/10 hover:border-emerald-500/30 hover:bg-emerald-950/20"
             }`}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setIsDragging(false);
-              const file = e.dataTransfer.files[0];
-              if (file) handleFileChange(file);
-            }}
+            onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFile(e.dataTransfer.files[0]); }}
             onClick={() => fileInputRef.current?.click()}
           >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".mp3,.wav,audio/*"
-              className="hidden"
-              onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
-            />
+            <input ref={fileInputRef} type="file" accept=".mp3,.wav,audio/*" className="hidden"
+              onChange={(e) => handleFile(e.target.files?.[0] ?? null)} />
             {audioFile ? (
               <>
-                <div className="w-10 h-10 rounded-full bg-[#1a6b55] dark:bg-[#2d9574] flex items-center justify-center">
-                  <Check size={18} className="text-white" />
+                <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+                  <Check size={16} className="text-emerald-400" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-medium text-[#1a1a18] dark:text-[#f0efe9] truncate max-w-[160px]">
-                    {audioFile.name}
-                  </p>
-                  <p className="text-xs text-[#888884] mt-0.5">
-                    {formatBytes(audioFile.size)} · ~
-                    {Math.floor(audioFile.size / (128 * 1024 / 8) / 60)} min
-                  </p>
+                  <p className="text-xs font-medium text-white truncate max-w-[140px]">{audioFile.name}</p>
+                  <p className="text-[10px] text-white/40 mt-0.5">{formatBytes(audioFile.size)}</p>
                 </div>
-                <button
-                  className="text-xs text-[#d85a30] hover:underline"
-                  onClick={(e) => { e.stopPropagation(); setAudioFile(null); setAudioError(""); }}
-                >
+                <button className="text-[10px] text-[#d85a30] hover:underline"
+                  onClick={(e) => { e.stopPropagation(); setAudioFile(null); setAudioError(""); }}>
                   Remove
                 </button>
               </>
             ) : (
               <>
-                <div className="w-10 h-10 rounded-full bg-[#e1f5ee] dark:bg-[#1e2820] flex items-center justify-center">
-                  <Mic size={18} className="text-[#1a6b55] dark:text-[#2d9574]" />
+                <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                  <Mic size={16} className="text-white/30" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-[#555550] dark:text-[#aaa]">
-                    Drop .mp3 or .wav here
-                  </p>
-                  <p className="text-xs text-[#bbb] mt-0.5">or click to browse</p>
+                  <p className="text-xs text-white/50">Drop .mp3 or .wav</p>
+                  <p className="text-[10px] text-white/25 mt-0.5">or click to browse</p>
                 </div>
               </>
             )}
           </div>
           {audioError && (
-            <div className="mt-2 flex items-start gap-1.5 text-xs text-[#d85a30]">
-              <AlertCircle size={12} className="flex-shrink-0 mt-0.5" />
-              {audioError}
+            <div className="mt-2 flex items-start gap-1.5 text-[10px] text-[#d85a30]">
+              <AlertCircle size={11} className="flex-shrink-0 mt-0.5" />{audioError}
             </div>
           )}
         </div>
 
-        {/* Record live */}
+        {/* Premium audio-studio recording panel */}
         <div>
-          <p className="text-xs font-medium text-[#555550] dark:text-[#aaa] mb-2 flex items-center gap-1.5">
-            <Mic size={12} /> Record live
-          </p>
-          <div className="rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#1c1d1b] p-6 flex flex-col items-center gap-4">
-            {/* Record button */}
-            <button
-              onClick={isRecording ? stopRecording : startRecording}
-              disabled={audioRecorded && !isRecording}
-              className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-sm ${
-                isRecording
-                  ? "bg-red-500 hover:bg-red-600 animate-pulse"
-                  : audioRecorded
-                  ? "bg-[#1a6b55] dark:bg-[#2d9574]"
-                  : "bg-[#f0eff0] dark:bg-[#2a2a2a] hover:bg-[#e0dfdf] dark:hover:bg-[#333]"
-              }`}
-            >
-              {audioRecorded ? (
-                <Check size={24} className="text-white" />
-              ) : isRecording ? (
-                <Square size={20} className="text-white" fill="white" />
-              ) : (
-                <Mic size={22} className="text-[#555550] dark:text-[#aaa]" />
-              )}
-            </button>
-
-            {/* Waveform when recording */}
-            {isRecording && (
-              <div className="flex items-end gap-1 h-6">
-                {[...Array(7)].map((_, i) => (
-                  <div key={i} className="waveform-bar" />
-                ))}
+          <p className={`flex items-center gap-1.5 ${labelCls}`}><Mic size={10} /> Record live</p>
+          <div className="relative rounded-[14px] overflow-hidden bg-[#060c09] border border-emerald-900/30 p-4 min-h-[148px] flex flex-col justify-between">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-950/60 via-transparent to-transparent" />
+            {/* Status bar */}
+            <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-sm rounded-full px-2.5 py-0.5">
+                <span className={`w-1.5 h-1.5 rounded-full ${isRecording ? "bg-red-500 animate-pulse-dot" : "bg-emerald-800"}`} />
+                <span className={`tracking-[0.2em] text-[8px] font-bold uppercase ${isRecording ? "text-red-400" : audioRecorded ? "text-emerald-600" : "text-white/25"}`}>
+                  {isRecording ? "Recording" : audioRecorded ? "Captured" : "Standby"}
+                </span>
               </div>
-            )}
-
-            {/* Timer */}
-            <p
-              className={`text-2xl font-mono ${
-                isRecording
-                  ? "text-red-500"
-                  : audioRecorded
-                  ? "text-[#1a6b55] dark:text-[#2d9574]"
-                  : "text-[#bbb]"
-              }`}
-            >
-              {formatTime(recordingTime)}
-            </p>
-
-            {/* Status */}
-            <p className="text-xs text-[#888884] text-center">
+              <span className={`text-[11px] font-mono ${isRecording ? "text-red-400" : audioRecorded ? "text-emerald-400" : "text-white/20"}`}>
+                {formatTime(recordingTime)}
+              </span>
+            </div>
+            {/* Waveform visualiser */}
+            <div className="flex items-end justify-center gap-[3px] h-10 relative z-10 my-1">
               {isRecording
-                ? "Recording… tap square to stop"
-                : audioRecorded
-                ? "Recording saved!"
-                : "Tap mic to start recording"}
-            </p>
-
-            {/* Playback controls after recording */}
-            {audioRecorded && !isRecording && (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[rgba(0,0,0,0.1)] dark:border-[rgba(255,255,255,0.1)] text-xs text-[#555550] dark:text-[#aaa] hover:bg-[#f7f6f3] dark:hover:bg-[#222321] transition-colors"
-                >
-                  <Play size={11} /> {isPlaying ? "Pause" : "Play back"}
-                </button>
-                <button
-                  onClick={() => { setAudioRecorded(false); setRecordingTime(0); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[rgba(0,0,0,0.1)] dark:border-[rgba(255,255,255,0.1)] text-xs text-[#d85a30] hover:bg-[#fbeee9] dark:hover:bg-[#2e1a10] transition-colors"
-                >
-                  <X size={11} /> Redo
-                </button>
-              </div>
-            )}
+                ? [...Array(16)].map((_, i) => (
+                    <div key={i} className="animate-waveform w-[3px] rounded-sm bg-emerald-400" style={{ animationDelay: `${i * 0.05}s` }} />
+                  ))
+                : staticWave.map((h, i) => (
+                    <div
+                      key={i}
+                      className={`w-[3px] rounded-sm transition-all duration-500 ${audioRecorded ? "bg-emerald-700" : "bg-white/10"}`}
+                      style={{ height: `${audioRecorded ? h : Math.max(4, Math.round(h * 0.3))}px` }}
+                    />
+                  ))
+              }
+            </div>
+            {/* Controls */}
+            <div className="flex items-center justify-center gap-3 relative z-10">
+              <button
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={audioRecorded && !isRecording}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                  isRecording
+                    ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-900/50"
+                    : audioRecorded
+                    ? "bg-emerald-900/60 border border-emerald-700/40"
+                    : "bg-white/10 border border-white/15 hover:bg-white/15"
+                }`}
+              >
+                {audioRecorded
+                  ? <Check size={16} className="text-emerald-400" />
+                  : isRecording
+                  ? <Square size={12} fill="white" className="text-white" />
+                  : <Mic size={15} className="text-white/50" />}
+              </button>
+              {audioRecorded && !isRecording && (
+                <>
+                  <button onClick={() => setIsPlaying(!isPlaying)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-white/10 text-[10px] text-white/50 hover:bg-white/5 transition">
+                    <Play size={10} /> {isPlaying ? "Pause" : "Play"}
+                  </button>
+                  <button onClick={() => { setAudioRecorded(false); setRecordingTime(0); }}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-white/10 text-[10px] text-[#d85a30] hover:bg-[#d85a30]/10 transition">
+                    <X size={10} /> Redo
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Script box */}
-      <div className="rounded-[10px] bg-[#f7f6f3] dark:bg-[#222321] p-4 mb-5 border border-[rgba(0,0,0,0.06)] dark:border-[rgba(255,255,255,0.06)]">
-        <p className="text-xs font-medium text-[#555550] dark:text-[#aaa] mb-2">
-          Read aloud for best results:
-        </p>
-        <p className="text-sm text-[#555550] dark:text-[#aaa] italic leading-relaxed">
-          "Good morning! I'm just calling to check in and see how you're doing
-          today. I hope you slept well and had a good breakfast. I love you and
-          I'm thinking of you. Tell me, how are you feeling? Did you take your
-          medicines? I'll call again tomorrow — take care of yourself."
+      {/* Script */}
+      <div className="rounded-[10px] bg-white/5 border border-white/10 p-4 mb-4">
+        <p className={labelCls}>Read aloud for best results</p>
+        <p className="text-sm text-white/45 italic leading-relaxed">
+          "Good morning! I'm just calling to check in and see how you're doing today. I hope you slept well and had a good breakfast. I love you and I'm thinking of you. Tell me, how are you feeling? Did you take your medicines? I'll call again tomorrow — take care of yourself."
         </p>
       </div>
 
-      {/* Quality bar */}
-      <div className="mb-5">
+      <div className="mb-4">
         <div className="flex items-center justify-between mb-1.5">
-          <p className="text-xs text-[#555550] dark:text-[#aaa]">
-            Estimated voice quality
-          </p>
-          <p className="text-xs font-medium text-[#1a6b55] dark:text-[#2d9574]">
-            85%
-          </p>
+          <p className={labelCls}>Estimated voice quality</p>
+          <p className="text-xs font-medium text-emerald-400">85%</p>
         </div>
-        <div className="h-2 rounded-full bg-[#e1f5ee] dark:bg-[#1e2820] overflow-hidden">
-          <div
-            className="h-full rounded-full bg-[#1a6b55] dark:bg-[#2d9574] transition-all"
-            style={{ width: audioFile || audioRecorded ? "85%" : "0%" }}
-          />
+        <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+          <div className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-700"
+            style={{ width: audioFile || audioRecorded ? "85%" : "0%" }} />
         </div>
       </div>
 
-      {/* Note */}
-      <p className="text-xs text-[#888884] mb-6 flex items-center gap-1.5">
-        <Clock size={11} /> Voice clone ready in approximately 2 hours after submission.
-      </p>
+      <p className="text-[10px] text-white/30 mb-6 flex items-center gap-1.5"><Clock size={10} /> Voice clone ready in approximately 2 hours after submission.</p>
 
       <div className="flex gap-3">
-        <button
-          onClick={onBack}
-          className="px-5 py-3 rounded-full border border-[rgba(0,0,0,0.1)] dark:border-[rgba(255,255,255,0.1)] text-sm text-[#555550] dark:text-[#aaa] hover:bg-[#f7f6f3] dark:hover:bg-[#222321] transition-colors"
-        >
-          Back
-        </button>
-        <button
-          onClick={onNext}
-          disabled={!canContinue}
-          className="flex-1 py-3 rounded-full bg-[#1a6b55] text-white text-sm font-medium hover:bg-[#134d3d] disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-        >
-          Continue <ChevronRight size={15} />
-        </button>
+        <button onClick={onBack} className={btnGhost}>Back</button>
+        <button onClick={onNext} disabled={!canContinue} className={`${btnCoral} flex-1`}>Continue <ChevronRight size={15} /></button>
       </div>
     </div>
   );
 }
 
-// ─── STEP 4: VIDEO AVATAR ─────────────────────────────────────────────────────
+// ── Step 4: Video Avatar ─────────────────────────────────────────────────────
 
-interface Step4Props {
-  onNext: () => void;
-  onBack: () => void;
-}
-
-function Step4({ onNext, onBack }: Step4Props) {
+function Step4({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
   const [consent, setConsent] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -735,7 +487,6 @@ function Step4({ onNext, onBack }: Step4Props) {
   const [recordingTime, setRecordingTime] = useState(0);
   const [videoRecorded, setVideoRecorded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -745,428 +496,269 @@ function Step4({ onNext, onBack }: Step4Props) {
     let c = 3;
     countdownRef.current = setInterval(() => {
       c -= 1;
-      if (c === 0) {
-        clearInterval(countdownRef.current!);
-        setCountdown(null);
-        beginRecording();
-      } else {
-        setCountdown(c);
-      }
+      if (c === 0) { clearInterval(countdownRef.current!); setCountdown(null); beginRecording(); }
+      else setCountdown(c);
     }, 1000);
   };
 
   const beginRecording = () => {
-    setIsRecording(true);
-    setRecordingTime(0);
-    timerRef.current = setInterval(() => {
-      setRecordingTime((t) => t + 1);
-    }, 1000);
+    setIsRecording(true); setRecordingTime(0);
+    timerRef.current = setInterval(() => setRecordingTime((t) => t + 1), 1000);
   };
 
   const stopRecording = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    setIsRecording(false);
-    setVideoRecorded(true);
+    setIsRecording(false); setVideoRecorded(true);
   };
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (countdownRef.current) clearInterval(countdownRef.current);
-    };
+  useEffect(() => () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
   }, []);
 
   const canContinue = consent && (videoFile !== null || videoRecorded);
-
   const tips = [
-    { icon: "☀️", text: "Good lighting — face a window or bright lamp" },
+    { icon: "☀️", text: "Face a window or bright lamp" },
     { icon: "👁️", text: "Look directly into the camera lens" },
-    { icon: "🗣️", text: "Speak naturally at a comfortable pace" },
-    { icon: "🪟", text: "Plain, uncluttered background works best" },
+    { icon: "🗣️", text: "Speak at a natural, comfortable pace" },
+    { icon: "🪟", text: "Plain, uncluttered background" },
   ];
 
   return (
     <div className="animate-slide-up">
       <div className="mb-6">
-        <h2
-          className="text-2xl text-[#1a1a18] dark:text-[#f0efe9] mb-1.5"
-          style={{ fontFamily: "var(--font-dm-serif)" }}
-        >
-          Record your video avatar
-        </h2>
-        <p className="text-sm text-[#555550] dark:text-[#888884] leading-relaxed">
-          Your video avatar will appear in personalised video messages sent to
-          your senior. We need 1–2 minutes of clear, well-lit footage.
+        <span className="tracking-[0.2em] text-[9px] uppercase text-emerald-400 font-medium block mb-3">Video AI Setup</span>
+        <h2 className="text-2xl text-white mb-1.5" style={{ fontFamily: "var(--font-dm-serif)" }}>Record your video avatar</h2>
+        <p className="text-sm text-white/45 leading-relaxed">
+          Your video avatar appears in personalised video messages sent to your senior. We need 1–2 minutes of clear, well-lit footage.
         </p>
       </div>
 
-      {/* Consent */}
-      <label className="flex items-start gap-3 p-4 rounded-[10px] bg-[#f4faf7] dark:bg-[#1e2820] border border-[rgba(0,0,0,0.06)] dark:border-[rgba(255,255,255,0.06)] cursor-pointer mb-5">
+      <label className="flex items-start gap-3 p-4 rounded-[10px] bg-emerald-950/30 border border-emerald-900/40 cursor-pointer mb-5">
         <div
-          className={`w-5 h-5 rounded flex-shrink-0 mt-0.5 border-2 flex items-center justify-center transition-colors ${
-            consent
-              ? "bg-[#1a6b55] dark:bg-[#2d9574] border-[#1a6b55] dark:border-[#2d9574]"
-              : "border-[rgba(0,0,0,0.2)] dark:border-[rgba(255,255,255,0.2)]"
-          }`}
+          className={`w-5 h-5 rounded flex-shrink-0 mt-0.5 border-2 flex items-center justify-center transition-colors ${consent ? "bg-emerald-500 border-emerald-500" : "border-white/20"}`}
           onClick={() => setConsent(!consent)}
         >
           {consent && <Check size={11} strokeWidth={3} className="text-white" />}
         </div>
-        <p className="text-sm text-[#555550] dark:text-[#aaa] leading-relaxed">
-          I consent to my likeness being used to generate an AI video avatar for
-          personalised messages to my senior only.
+        <p className="text-sm text-white/50 leading-relaxed">
+          I consent to my likeness being used to generate an AI video avatar for personalised messages to my senior only.
         </p>
       </label>
 
-      {/* Two panels */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
         {/* Upload video */}
         <div>
-          <p className="text-xs font-medium text-[#555550] dark:text-[#aaa] mb-2 flex items-center gap-1.5">
-            <Upload size={12} /> Upload video file
-          </p>
+          <p className={`flex items-center gap-1.5 ${labelCls}`}><Upload size={10} /> Upload video</p>
           <div
-            className={`rounded-[12px] border-2 border-dashed p-6 flex flex-col items-center gap-3 cursor-pointer transition-colors min-h-[160px] justify-center ${
-              isDragging
-                ? "border-[#1a6b55] bg-[#f4faf7] dark:bg-[#1e2820]"
-                : videoFile
-                ? "border-[#1a6b55] bg-[#f4faf7] dark:bg-[#1e2820]"
-                : "border-[rgba(0,0,0,0.12)] dark:border-[rgba(255,255,255,0.12)] hover:border-[#1a6b55]/50 dark:hover:border-[#2d9574]/50"
+            className={`rounded-[14px] border-2 border-dashed p-5 flex flex-col items-center gap-3 cursor-pointer transition-all min-h-[168px] justify-center ${
+              isDragging || videoFile
+                ? "border-emerald-500/50 bg-emerald-950/30"
+                : "border-white/10 hover:border-emerald-500/30 hover:bg-emerald-950/20"
             }`}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setIsDragging(false);
-              const file = e.dataTransfer.files[0];
-              if (file) setVideoFile(file);
-            }}
+            onDrop={(e) => { e.preventDefault(); setIsDragging(false); const f = e.dataTransfer.files[0]; if (f) setVideoFile(f); }}
             onClick={() => fileInputRef.current?.click()}
           >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".mp4,.mov,video/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) setVideoFile(file);
-              }}
-            />
+            <input ref={fileInputRef} type="file" accept=".mp4,.mov,video/*" className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) setVideoFile(f); }} />
             {videoFile ? (
               <>
-                {/* Thumbnail placeholder */}
-                <div className="w-full h-24 rounded-[8px] bg-[#1a1a18] dark:bg-black flex items-center justify-center">
-                  <Video size={28} className="text-[#555]" />
+                <div className="w-full h-20 rounded-[8px] bg-white/5 border border-white/10 flex items-center justify-center">
+                  <Video size={22} className="text-white/20" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-medium text-[#1a1a18] dark:text-[#f0efe9] truncate max-w-[160px]">
-                    {videoFile.name}
-                  </p>
-                  <p className="text-xs text-[#888884] mt-0.5">
-                    {formatBytes(videoFile.size)}
-                  </p>
+                  <p className="text-xs font-medium text-white truncate max-w-[140px]">{videoFile.name}</p>
+                  <p className="text-[10px] text-white/40 mt-0.5">{formatBytes(videoFile.size)}</p>
                 </div>
-                <button
-                  className="text-xs text-[#d85a30] hover:underline"
-                  onClick={(e) => { e.stopPropagation(); setVideoFile(null); }}
-                >
-                  Remove
-                </button>
+                <button className="text-[10px] text-[#d85a30] hover:underline"
+                  onClick={(e) => { e.stopPropagation(); setVideoFile(null); }}>Remove</button>
               </>
             ) : (
               <>
-                <div className="w-10 h-10 rounded-full bg-[#e1f5ee] dark:bg-[#1e2820] flex items-center justify-center">
-                  <Video size={18} className="text-[#1a6b55] dark:text-[#2d9574]" />
+                <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                  <Video size={16} className="text-white/30" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-[#555550] dark:text-[#aaa]">
-                    Drop .mp4 or .mov here
-                  </p>
-                  <p className="text-xs text-[#bbb] mt-0.5">or click to browse</p>
+                  <p className="text-xs text-white/50">Drop .mp4 or .mov</p>
+                  <p className="text-[10px] text-white/25 mt-0.5">or click to browse</p>
                 </div>
               </>
             )}
           </div>
         </div>
 
-        {/* Webcam record */}
+        {/* Cinematic webcam viewfinder */}
         <div>
-          <p className="text-xs font-medium text-[#555550] dark:text-[#aaa] mb-2 flex items-center gap-1.5">
-            <Camera size={12} /> Record with webcam
-          </p>
-          <div className="rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#1c1d1b] p-4 flex flex-col items-center gap-4 min-h-[160px] justify-center">
-            {/* Camera preview placeholder */}
-            <div className="w-full h-28 rounded-[8px] bg-[#f0eff0] dark:bg-[#2a2a2a] flex items-center justify-center relative overflow-hidden">
+          <p className={`flex items-center gap-1.5 ${labelCls}`}><Camera size={10} /> Record with webcam</p>
+          <div className="relative rounded-[14px] overflow-hidden bg-[#060810] border border-white/10 min-h-[168px] flex flex-col items-center justify-center gap-3 p-4">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-teal-950/50 via-transparent to-blue-950/30" />
+            {/* Viewfinder corner brackets */}
+            <div className="absolute top-3 left-3 w-5 h-5 border-t-2 border-l-2 border-white/25 pointer-events-none" />
+            <div className="absolute top-3 right-3 w-5 h-5 border-t-2 border-r-2 border-white/25 pointer-events-none" />
+            <div className="absolute bottom-[52px] left-3 w-5 h-5 border-b-2 border-l-2 border-white/25 pointer-events-none" />
+            <div className="absolute bottom-[52px] right-3 w-5 h-5 border-b-2 border-r-2 border-white/25 pointer-events-none" />
+            {/* LIVE VIDEO STREAM badge — always present, signals capability */}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1 border border-red-500/20 z-10">
+              <span className={`w-1.5 h-1.5 rounded-full ${isRecording ? "bg-red-500 animate-pulse-dot" : "bg-red-900/60"}`} />
+              <span className="tracking-[0.2em] text-[8px] font-bold text-red-400/80 uppercase">Live Video Stream</span>
+            </div>
+            {/* Center content */}
+            <div className="relative z-10 flex flex-col items-center gap-2 mt-3">
               {isRecording ? (
-                <div className="absolute inset-0 bg-[#1a1a18] flex items-center justify-center">
-                  <span className="text-green-400 text-xs">● LIVE</span>
+                <div className="w-12 h-12 rounded-full border-2 border-red-500/40 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-red-500/25 animate-pulse" />
                 </div>
               ) : videoRecorded ? (
-                <div className="absolute inset-0 bg-[#1a1a18] flex items-center justify-center gap-2">
-                  <Check size={18} className="text-[#2d9574]" />
-                  <span className="text-white text-xs">Preview ready</span>
-                </div>
+                <>
+                  <div className="w-10 h-10 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                    <Check size={18} className="text-emerald-400" />
+                  </div>
+                  <span className="text-[10px] text-white/40">Preview ready</span>
+                </>
               ) : (
-                <Camera size={28} className="text-[#ccc] dark:text-[#555]" />
-              )}
-              {/* Red recording dot */}
-              {isRecording && (
-                <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-black/50 rounded-full px-2 py-0.5">
-                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                  <span className="text-white text-[10px] font-mono">
-                    {formatTime(recordingTime)}
-                  </span>
-                </div>
-              )}
-              {/* Countdown overlay */}
-              {countdown !== null && (
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <span className="text-white text-5xl font-bold">{countdown}</span>
-                </div>
+                <>
+                  <Camera size={22} className="text-white/15" />
+                  <span className="text-[10px] text-white/25">Camera preview</span>
+                </>
               )}
             </div>
-
             {/* Controls */}
-            {!isRecording && !videoRecorded && countdown === null && (
-              <button
-                onClick={startCountdown}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500 text-white text-xs font-medium hover:bg-red-600 transition-colors"
-              >
-                <div className="w-2 h-2 rounded-full bg-white" />
-                Start recording
-              </button>
-            )}
-
+            <div className="relative z-10 flex items-center gap-2">
+              {!isRecording && !videoRecorded && countdown === null && (
+                <button onClick={startCountdown}
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-red-500/80 hover:bg-red-500 text-white text-[11px] font-medium hover:-translate-y-0.5 active:translate-y-0 transition-all">
+                  <div className="w-1.5 h-1.5 rounded-full bg-white" /> Start recording
+                </button>
+              )}
+              {isRecording && (
+                <button onClick={stopRecording}
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/10 border border-white/15 text-white text-[11px] hover:bg-white/15 transition">
+                  <Square size={10} fill="white" /> Stop
+                </button>
+              )}
+              {videoRecorded && (
+                <>
+                  <button className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-white/10 text-[10px] text-white/50 hover:bg-white/5 transition">
+                    <Play size={10} /> Preview
+                  </button>
+                  <button onClick={() => { setVideoRecorded(false); setRecordingTime(0); }}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-white/10 text-[10px] text-[#d85a30] hover:bg-[#d85a30]/10 transition">
+                    <X size={10} /> Redo
+                  </button>
+                </>
+              )}
+            </div>
             {isRecording && (
-              <button
-                onClick={stopRecording}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#333] text-white text-xs font-medium hover:bg-[#444] transition-colors"
-              >
-                <Square size={11} fill="white" /> Stop
-              </button>
+              <div className="absolute bottom-3 right-3 bg-black/60 rounded-full px-2 py-0.5 z-10">
+                <span className="text-[10px] font-mono text-white/70">{formatTime(recordingTime)}</span>
+              </div>
             )}
-
-            {videoRecorded && (
-              <div className="flex items-center gap-2">
-                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[rgba(0,0,0,0.1)] dark:border-[rgba(255,255,255,0.1)] text-xs text-[#555550] dark:text-[#aaa] hover:bg-[#f7f6f3] dark:hover:bg-[#222321] transition-colors">
-                  <Play size={11} /> Preview
-                </button>
-                <button
-                  onClick={() => { setVideoRecorded(false); setRecordingTime(0); }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[rgba(0,0,0,0.1)] dark:border-[rgba(255,255,255,0.1)] text-xs text-[#d85a30] hover:bg-[#fbeee9] dark:hover:bg-[#2e1a10] transition-colors"
-                >
-                  <X size={11} /> Redo
-                </button>
+            {countdown !== null && (
+              <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-20">
+                <span className="text-white text-6xl font-bold" style={{ fontFamily: "var(--font-dm-serif)" }}>{countdown}</span>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Tips */}
-      <div className="rounded-[10px] bg-[#fef3e2] dark:bg-[#2e2412] border border-[rgba(0,0,0,0.06)] dark:border-[rgba(255,255,255,0.06)] p-4 mb-5">
-        <p className="text-xs font-medium text-[#c47d10] dark:text-[#efb045] mb-3">
-          Tips for a great avatar
-        </p>
+      <div className="rounded-[10px] bg-amber-950/20 border border-amber-900/30 p-4 mb-4">
+        <p className={`${labelCls} text-amber-400/70`}>Tips for a great avatar</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {tips.map(({ icon, text }) => (
-            <div key={text} className="flex items-start gap-2 text-xs text-[#555550] dark:text-[#aaa]">
-              <span className="flex-shrink-0">{icon}</span>
-              <span>{text}</span>
+            <div key={text} className="flex items-start gap-2 text-xs text-white/45">
+              <span className="flex-shrink-0">{icon}</span><span>{text}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Note */}
-      <p className="text-xs text-[#888884] mb-6 flex items-center gap-1.5">
-        <Clock size={11} /> Video avatar ready in approximately 4 hours after submission.
-      </p>
+      <p className="text-[10px] text-white/30 mb-6 flex items-center gap-1.5"><Clock size={10} /> Video avatar ready in approximately 4 hours after submission.</p>
 
       <div className="flex gap-3">
-        <button
-          onClick={onBack}
-          className="px-5 py-3 rounded-full border border-[rgba(0,0,0,0.1)] dark:border-[rgba(255,255,255,0.1)] text-sm text-[#555550] dark:text-[#aaa] hover:bg-[#f7f6f3] dark:hover:bg-[#222321] transition-colors"
-        >
-          Back
-        </button>
-        <button
-          onClick={onNext}
-          disabled={!canContinue}
-          className="flex-1 py-3 rounded-full bg-[#1a6b55] text-white text-sm font-medium hover:bg-[#134d3d] disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-        >
-          Continue <ChevronRight size={15} />
-        </button>
+        <button onClick={onBack} className={btnGhost}>Back</button>
+        <button onClick={onNext} disabled={!canContinue} className={`${btnCoral} flex-1`}>Continue <ChevronRight size={15} /></button>
       </div>
     </div>
   );
 }
 
-// ─── STEP 5: ALL SET ──────────────────────────────────────────────────────────
+// ── Step 5: All Set ──────────────────────────────────────────────────────────
 
-interface Step5Props {
-  formData: FormData;
-  selectedPlan: Plan;
-  voiceDone: boolean;
-  videoDone: boolean;
-}
-
-function Step5({ formData, selectedPlan, voiceDone, videoDone }: Step5Props) {
-  const planLabel =
-    PLANS.find((p) => p.id === selectedPlan)?.name ?? selectedPlan;
-
+function Step5({ formData, selectedPlan, voiceDone, videoDone }: {
+  formData: FormData; selectedPlan: Plan; voiceDone: boolean; videoDone: boolean;
+}) {
+  const planLabel = PLANS.find((p) => p.id === selectedPlan)?.name ?? selectedPlan;
   const firstCall = (() => {
     if (!formData.callTime) return "Tomorrow morning";
     const [h, m] = formData.callTime.split(":").map(Number);
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    d.setHours(h, m, 0, 0);
-    return d.toLocaleString("en-IN", {
-      weekday: "long",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+    const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(h, m, 0, 0);
+    return d.toLocaleString("en-IN", { weekday: "long", hour: "2-digit", minute: "2-digit", hour12: true });
   })();
 
-  const summaryItems = [
-    {
-      label: "Senior",
-      value: formData.seniorName || "—",
-      icon: <Phone size={14} />,
-    },
-    {
-      label: "Plan",
-      value: `${planLabel} (${PLANS.find((p) => p.id === selectedPlan)?.price ?? ""})`,
-      icon: <Check size={14} />,
-    },
-    {
-      label: "Voice clone",
-      value: voiceDone ? "Submitted — ready in ~2 hrs" : "Not set up",
-      icon: <Mic size={14} />,
-      accent: voiceDone,
-    },
-    {
-      label: "Video avatar",
-      value: videoDone ? "Submitted — ready in ~4 hrs" : "Not set up",
-      icon: <Video size={14} />,
-      accent: videoDone,
-    },
-    {
-      label: "First call",
-      value: firstCall,
-      icon: <Clock size={14} />,
-    },
+  const items = [
+    { label: "Senior", value: formData.seniorName || "—", icon: <Phone size={13} />, accent: false },
+    { label: "Plan", value: `${planLabel} · ${PLANS.find((p) => p.id === selectedPlan)?.price ?? ""}`, icon: <Check size={13} />, accent: false },
+    { label: "Voice clone", value: voiceDone ? "Submitted — ready in ~2 hrs" : "Not set up", icon: <Mic size={13} />, accent: voiceDone },
+    { label: "Video avatar", value: videoDone ? "Submitted — ready in ~4 hrs" : "Not set up", icon: <Video size={13} />, accent: videoDone },
+    { label: "First call", value: firstCall, icon: <Clock size={13} />, accent: false },
   ];
 
   return (
     <div className="animate-slide-up text-center">
-      {/* Checkmark animation */}
-      <div className="flex justify-center mb-6">
-        <div className="w-20 h-20 rounded-full bg-[#e1f5ee] dark:bg-[#1e2820] flex items-center justify-center">
-          <div className="w-14 h-14 rounded-full bg-[#1a6b55] dark:bg-[#2d9574] flex items-center justify-center animate-slide-up">
-            <Check size={28} strokeWidth={2.5} className="text-white" />
+      <div className="flex justify-center mb-7">
+        <div className="relative w-20 h-20">
+          <div className="absolute inset-0 rounded-full bg-emerald-500/10 animate-pulse" />
+          <div className="absolute inset-0 rounded-full scale-125 bg-emerald-500/5 animate-pulse" style={{ animationDelay: "0.2s" }} />
+          <div className="relative w-20 h-20 rounded-full bg-emerald-950/60 border border-emerald-500/30 flex items-center justify-center z-10">
+            <Check size={28} strokeWidth={2} className="text-emerald-400" />
           </div>
         </div>
       </div>
-
-      <h2
-        className="text-3xl text-[#1a1a18] dark:text-[#f0efe9] mb-2"
-        style={{ fontFamily: "var(--font-dm-serif)" }}
-      >
-        You're all set!
-      </h2>
-      <p className="text-sm text-[#555550] dark:text-[#888884] mb-8 max-w-sm mx-auto leading-relaxed">
+      <h2 className="text-3xl text-white mb-2" style={{ fontFamily: "var(--font-dm-serif)" }}>You're all set!</h2>
+      <p className="text-sm text-white/45 mb-8 max-w-sm mx-auto leading-relaxed">
         WellRing will begin calling{" "}
-        <span className="font-medium text-[#1a6b55] dark:text-[#2d9574]">
-          {formData.seniorName || "your senior"}
-        </span>{" "}
-        starting tomorrow. Here's a summary of what's set up.
+        <span className="text-emerald-400 font-medium">{formData.seniorName || "your senior"}</span>{" "}
+        starting tomorrow. Here's what's ready.
       </p>
-
-      {/* Summary card */}
-      <div className="text-left bg-white dark:bg-[#1c1d1b] border border-[rgba(0,0,0,0.08)] dark:border-[rgba(255,255,255,0.08)] rounded-[14px] p-5 mb-7 max-w-md mx-auto">
+      <div className="text-left bg-white/5 border border-white/10 rounded-[14px] p-5 mb-7 max-w-md mx-auto">
         <ul className="space-y-3">
-          {summaryItems.map(({ label, value, icon, accent }) => (
-            <li
-              key={label}
-              className="flex items-start gap-3 text-sm"
-            >
-              <span
-                className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center mt-0.5 ${
-                  accent
-                    ? "bg-[#e1f5ee] dark:bg-[#1e2820] text-[#1a6b55] dark:text-[#2d9574]"
-                    : "bg-[#f7f6f3] dark:bg-[#222321] text-[#888884]"
-                }`}
-              >
+          {items.map(({ label, value, icon, accent }) => (
+            <li key={label} className="flex items-start gap-3 text-sm">
+              <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center mt-0.5 ${accent ? "bg-emerald-950/60 text-emerald-400 border border-emerald-900/50" : "bg-white/5 text-white/30 border border-white/10"}`}>
                 {icon}
               </span>
               <div>
-                <p className="text-xs text-[#888884] mb-0.5">{label}</p>
-                <p
-                  className={`font-medium ${
-                    accent
-                      ? "text-[#1a6b55] dark:text-[#2d9574]"
-                      : "text-[#1a1a18] dark:text-[#f0efe9]"
-                  }`}
-                >
-                  {value}
-                </p>
+                <p className={`${labelCls} mb-0.5`}>{label}</p>
+                <p className={`text-sm font-medium ${accent ? "text-emerald-400" : "text-white/75"}`}>{value}</p>
               </div>
             </li>
           ))}
         </ul>
       </div>
-
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-[#1a6b55] text-white text-sm font-medium hover:bg-[#134d3d] active:scale-95 transition-all shadow-sm"
-      >
+      <Link href="/dashboard" className={`${btnCoral} mx-auto`}>
         Go to Dashboard <ChevronRight size={15} />
       </Link>
     </div>
   );
 }
 
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
+// ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function OnboardingPage() {
-  const [formData, setFormData] = useState<FormData>({
-    seniorName: "",
-    phone: "",
-    city: "",
-    language: "",
-    callTime: "",
-  });
+  const [formData, setFormData] = useState<FormData>({ seniorName: "", phone: "", city: "", language: "", callTime: "" });
   const [selectedPlan, setSelectedPlan] = useState<Plan>("family");
   const [currentStep, setCurrentStep] = useState(0);
-
-  // Track whether voice/video were submitted (for step 5 summary)
   const [voiceSubmitted, setVoiceSubmitted] = useState(false);
   const [videoSubmitted, setVideoSubmitted] = useState(false);
 
-  // Compute which wizard steps to show based on plan
   const needsVoice = selectedPlan !== "basic";
   const needsVideo = selectedPlan === "family_plus" || selectedPlan === "premium";
 
-  const stepLabels = [
-    "Senior Info",
-    "Choose Plan",
-    ...(needsVoice ? ["Voice Clone"] : []),
-    ...(needsVideo ? ["Video Avatar"] : []),
-    "All Set!",
-  ];
-
-  // Map wizard step index to logical step id
-  const stepIds = [
-    "info",
-    "plan",
-    ...(needsVoice ? ["voice"] : []),
-    ...(needsVideo ? ["video"] : []),
-    "done",
-  ];
-
+  const stepLabels = ["Senior Info", "Choose Plan", ...(needsVoice ? ["Voice Clone"] : []), ...(needsVideo ? ["Video Avatar"] : []), "All Set!"];
+  const stepIds    = ["info", "plan",    ...(needsVoice ? ["voice"]      : []), ...(needsVideo ? ["video"]       : []), "done"];
   const currentStepId = stepIds[currentStep];
 
   const goNext = () => {
@@ -1176,74 +768,43 @@ export default function OnboardingPage() {
   };
   const goBack = () => setCurrentStep((s) => Math.max(s - 1, 0));
 
-  // When plan changes, clamp step if steps are removed
   useEffect(() => {
     setCurrentStep((s) => Math.min(s, stepIds.length - 1));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPlan]);
 
   return (
-    <div className="min-h-screen bg-[#f7f6f3] dark:bg-[#111210] flex flex-col">
-      {/* Top bar */}
-      <div className="sticky top-0 z-40 bg-white/90 dark:bg-[#1c1d1b]/90 backdrop-blur-sm border-b border-[rgba(0,0,0,0.06)] dark:border-[rgba(255,255,255,0.06)]">
+    <div className="min-h-screen bg-[#0d1510] flex flex-col relative overflow-hidden">
+      {/* Ambient mesh */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-20 -left-20 w-[480px] h-[480px] rounded-full bg-emerald-950/80 blur-3xl" />
+        <div className="absolute -bottom-10 -right-16 w-[400px] h-[400px] rounded-full bg-teal-950/60 blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] rounded-full bg-emerald-900/20 blur-3xl" />
+      </div>
+
+      {/* Top nav */}
+      <div className="relative z-40 border-b border-white/5">
         <div className="max-w-2xl mx-auto px-5 h-14 flex items-center justify-between">
-          <Link
-            href="/landing"
-            className="text-xl text-[#1a6b55] dark:text-[#2d9574]"
-            style={{ fontFamily: "var(--font-dm-serif)" }}
-          >
+          <Link href="/landing" className="text-xl text-emerald-400" style={{ fontFamily: "var(--font-dm-serif)" }}>
             WellRing
           </Link>
-          <span className="text-xs text-[#888884]">
+          <span className="tracking-[0.15em] text-[9px] uppercase text-white/25">
             Step {currentStep + 1} of {stepIds.length}
           </span>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex items-start justify-center px-5 py-10">
+      <div className="relative z-10 flex-1 flex items-start justify-center px-5 py-10">
         <div className="w-full max-w-2xl">
-          {/* Stepper */}
           <Stepper steps={stepLabels} current={currentStep} />
-
-          {/* Card */}
-          <div className="bg-white dark:bg-[#1c1d1b] border border-[rgba(0,0,0,0.08)] dark:border-[rgba(255,255,255,0.08)] rounded-[14px] p-6 md:p-8 shadow-card">
-            {currentStepId === "info" && (
-              <Step1
-                formData={formData}
-                setFormData={setFormData}
-                onNext={goNext}
-              />
-            )}
-            {currentStepId === "plan" && (
-              <Step2
-                selectedPlan={selectedPlan}
-                setSelectedPlan={setSelectedPlan}
-                onNext={goNext}
-                onBack={goBack}
-              />
-            )}
-            {currentStepId === "voice" && (
-              <Step3
-                seniorName={formData.seniorName}
-                onNext={goNext}
-                onBack={goBack}
-              />
-            )}
-            {currentStepId === "video" && (
-              <Step4
-                onNext={goNext}
-                onBack={goBack}
-              />
-            )}
-            {currentStepId === "done" && (
-              <Step5
-                formData={formData}
-                selectedPlan={selectedPlan}
-                voiceDone={voiceSubmitted}
-                videoDone={videoSubmitted}
-              />
-            )}
+          {/* Glassmorphism card */}
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[20px] p-6 md:p-8 shadow-2xl shadow-black/50">
+            {currentStepId === "info"  && <Step1 formData={formData} setFormData={setFormData} onNext={goNext} />}
+            {currentStepId === "plan"  && <Step2 selectedPlan={selectedPlan} setSelectedPlan={setSelectedPlan} onNext={goNext} onBack={goBack} />}
+            {currentStepId === "voice" && <Step3 seniorName={formData.seniorName} onNext={goNext} onBack={goBack} />}
+            {currentStepId === "video" && <Step4 onNext={goNext} onBack={goBack} />}
+            {currentStepId === "done"  && <Step5 formData={formData} selectedPlan={selectedPlan} voiceDone={voiceSubmitted} videoDone={videoSubmitted} />}
           </div>
         </div>
       </div>

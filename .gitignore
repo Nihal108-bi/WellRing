@@ -39,3 +39,5 @@ backend/alembic/versions/*.py
 .env
 .env.*
 !.env.example
+.aidesigner/*
+!.aidesigner/.gitkeep

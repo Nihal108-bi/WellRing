@@ -14,6 +14,10 @@ Target market: Indian families with a senior relative living separately (in anot
 WellRing/
 ├── frontend/        ← Next.js 14 app (all UI)
 ├── backend/         ← FastAPI app (API, AI pipeline, call orchestration)
+├── .aidesigner/     ← AIDesigner workspace (auto-generated)
+├── .agents/         ← Agent skill definitions (aidesigner-frontend)
+├── .claude/         ← Claude Code config: agents, commands, skills
+├── .mcp.json        ← MCP server config (aidesigner)
 ├── wellring_blueprint.pdf
 └── wellring_business_plan.pdf
 ```
@@ -97,6 +101,21 @@ npx tsc --noEmit  # type-check only
 
 **Dashboard shell:** `src/app/dashboard/layout.tsx` — shared sidebar with `usePathname` active detection, mobile drawer, topbar. Wraps all `/dashboard/*` routes.
 
+### Landing sub-components (`src/components/landing/`)
+
+| File | Responsibility |
+|---|---|
+| `LandingNav.tsx` | Sticky top nav with logo, links, theme toggle |
+| `LandingHero.tsx` | Asymmetric 58/42 hero grid — gradient ambient mesh, DM Serif gradient headings, floating UI cards |
+| `LandingFeatures.tsx` | 6-card feature grid with asymmetric section header and ambient mesh blobs |
+| `FeatureCardPreviews.tsx` | Premium micro-UI preview components: `AlertPreview`, `CallPreview`, `DashboardPreview`, `VoicePreview`, `BaselinePreview`, `VideoPreview` |
+| `LandingHowItWorks.tsx` | Numbered step-by-step walkthrough |
+| `LandingStatsBand.tsx` | Count-up stats strip |
+| `LandingPricing.tsx` | 4-plan pricing cards with video avatar badge sync |
+| `LandingTestimonials.tsx` | Infinite marquee testimonials (2 rows, 12 reviews each) |
+| `SeniorFaces.tsx` | 6-portrait senior faces strip |
+| `LandingFooter.tsx` | Footer with links and legal copy |
+
 ### Pricing plans (frontend data)
 
 | ID | Name | Price | Voice clone | Video avatar |
@@ -160,12 +179,13 @@ uvicorn main:app --reload   # http://localhost:8000
 
 ## Current status
 
-### Completed (as of 21 May 2025)
+### Completed (as of 24 May 2026)
 - All frontend pages built and TypeScript-verified (zero errors)
 - Full dashboard with shared layout (`dashboard/layout.tsx`) and 5 sub-pages: calls, alerts, profile, baseline, settings
 - Landing page, onboarding wizard, login/signup page
 - Landing page visual enhancement v1: two-column hero with real photo + floating UI cards, live feature card mockups, stats band, glass testimonial cards with real avatars, background blob decorations, Unsplash remote image support in next.config.mjs
-- Landing page v2 (22 May 2026): logo upgrade, animated video avatar badge, Savitri floating card, SeniorFaces strip (6 portraits), AI Video Avatar feature card with live mockup, infinite marquee testimonials (2 rows, 12 reviews each), count-up stats, scroll-reveal fade-ups, pricing video avatar sync with 🎥 NEW badge, float animation on hero overlays — split into src/components/landing/ sub-components
+- Landing page v2 (22 May 2026): logo upgrade, animated video avatar badge, Savitri floating card, SeniorFaces strip (6 portraits), AI Video Avatar feature card with live mockup, infinite marquee testimonials (2 rows, 12 reviews each), count-up stats, scroll-reveal fade-ups, pricing video avatar sync with NEW badge, float animation on hero overlays — split into src/components/landing/ sub-components
+- AIDesigner skill installed (24 May 2026): `@aidesigner/agent-skills init` — MCP server wired in `.mcp.json`, `/aidesigner` command available, frontend skill + rubric in `.claude/skills/aidesigner-frontend/`
 
 ### Not started
 - Backend (`backend/`) — FastAPI scaffold, database, auth, call orchestration, AI pipeline, real API integration
@@ -180,6 +200,19 @@ uvicorn main:app --reload   # http://localhost:8000
 - Wire frontend dashboard to real API endpoints (replace mock data)
 - Integrate Twilio for call scheduling
 - Integrate ElevenLabs (or equivalent) for voice clone pipeline
+
+---
+
+## AIDesigner tooling
+
+Installed via `npx @aidesigner/agent-skills init` on 24 May 2026.
+
+- **MCP server:** `.mcp.json` — connect via `/mcp` in Claude Code if prompted
+- **Slash command:** `/aidesigner <request>` — invokes the aidesigner-frontend skill
+- **Skill files:** `.claude/skills/aidesigner-frontend/` — `SKILL.md`, `references/api.md`, `references/frontend-rubric.md`
+- **Agent definition:** `.claude/agents/aidesigner-frontend.md`
+
+Use `/aidesigner` for AI-assisted frontend component generation and design tasks.
 
 ---
 
