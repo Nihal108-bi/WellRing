@@ -1,0 +1,76 @@
+[project]
+name = "wellring-backend"
+version = "0.1.0"
+description = "WellRing AI daily check-in companion — backend"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    # Core framework
+    "fastapi==0.115.6",
+    "uvicorn[standard]==0.32.1",
+    "websockets==14.1",
+    "pydantic==2.9.2",
+    "pydantic-settings==2.6.1",
+
+    # Database
+    "sqlalchemy[asyncio]==2.0.36",
+    "asyncpg==0.30.0",
+    "alembic==1.14.0",
+    "pgvector==0.3.6",
+
+    # Task queue
+    "celery[redis]==5.4.0",
+    "redis[hiredis]==5.2.0",
+    "kombu==5.4.2",
+
+    # Telephony
+    "twilio==9.3.7",
+
+    # Auth
+    "pyjwt==2.10.1",
+    "cryptography==43.0.3",
+
+    # HTTP clients
+    "aiohttp==3.10.10",
+    "httpx==0.28.1",
+
+    # Observability
+    "structlog==24.4.0",
+    "sentry-sdk[fastapi]==2.19.2",
+
+    # Cloud storage
+    "boto3==1.35.91",
+
+    # Utilities
+    "python-multipart==0.0.20",
+    "python-dotenv==1.0.1",
+    "email-validator==2.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==8.3.4",
+    "pytest-asyncio==0.25.0",
+    "pytest-cov==6.0.0",
+    "httpx==0.28.1",
+    "factory-boy==3.3.1",
+    "ruff==0.8.4",
+    "mypy==1.13.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "B", "UP", "RUF"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
