@@ -30,6 +30,13 @@ class Settings(BaseSettings):
     # --- Redis ---
     redis_url: SecretStr
 
+    # --- Telephony ---
+    twilio_account_sid: SecretStr
+    twilio_auth_token: SecretStr
+    twilio_phone_number: str
+    telephony_provider: Literal["twilio", "exotel", "telnyx"] = "twilio" 
+    test_target_phone: str = "" 
+    
     # --- Auth (Clerk) ---
     clerk_secret_key: SecretStr
     clerk_jwks_url: str
@@ -59,6 +66,7 @@ class Settings(BaseSettings):
 
     elevenlabs_api_key: SecretStr = SecretStr("")
     cartesia_api_key: SecretStr = SecretStr("")
+    cartesia_default_voice_id: str = "156fb8d2-335b-4950-9cb3-a2d33befec77"  
     tts_primary: Literal["elevenlabs", "cartesia"] = "cartesia"
 
     # --- Observability ---

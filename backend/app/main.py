@@ -21,6 +21,7 @@ from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging, get_logger
 from app.db.session import close_engine
+from app.workers import tasks as _celery_tasks 
 
 configure_logging()
 log = get_logger(__name__)
@@ -42,6 +43,40 @@ def _init_sentry() -> None:
     log.info("sentry_initialised", env=settings.app_env)
 
 
+async def warm_pipeline_models() -> None:
+    """
+    Pre-load Pipecat's ML models so the first call doesn't time out
+    on Twilio's ~30s WebSocket timeout. On first uvicorn boot this
+    takes ~40s. On subsequent boots, models are cached on disk → fast.
+    """
+    log.info("warming_pipeline_models")
+
+    try:
+        import transformers  # noqa: F401
+    except Exception as exc:
+        log.warning("transformers_import_skipped", error=str(exc))
+
+    try:
+        from pipecat.audio.vad.silero import SileroVADAnalyzer
+        _silero = SileroVADAnalyzer()
+        del _silero
+        log.info("silero_vad_warmed")
+    except Exception as exc:
+        log.warning("silero_vad_warm_failed", error=str(exc))
+
+    try:
+        from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import (
+            LocalSmartTurnAnalyzerV3,
+        )
+        _smart_turn = LocalSmartTurnAnalyzerV3()
+        del _smart_turn
+        log.info("smart_turn_v3_warmed")
+    except Exception as exc:
+        log.warning("smart_turn_warm_failed", error=str(exc))
+
+    log.info("pipeline_models_ready")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Startup + shutdown hooks."""
@@ -52,6 +87,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         telephony=settings.telephony_provider,
     )
     _init_sentry()
+    await warm_pipeline_models()
 
     yield
 

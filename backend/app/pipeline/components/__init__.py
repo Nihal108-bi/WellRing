@@ -1,0 +1,1 @@
+"""Pipeline components — STT, LLM, TTS factories."""

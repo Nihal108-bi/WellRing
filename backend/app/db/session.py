@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-
+from sqlalchemy.pool import NullPool   
 from app.core.config import settings
 from app.core.logging import get_logger
 
@@ -86,3 +86,37 @@ async def close_engine() -> None:
     """Called on app shutdown to release connection pool."""
     await engine.dispose()
     log.info("db_engine_disposed")
+
+
+@asynccontextmanager
+async def get_worker_db_context() -> AsyncGenerator[AsyncSession, None]:
+    """
+    DB session for Celery workers — creates a fresh engine per call.
+
+    Required because asyncio.run() in each Celery task creates a new event loop,
+    but the module-level engine's pool holds connections bound to the first loop.
+    NullPool means no pooling — every session opens a fresh connection that
+    lives only as long as the task. Adds ~5ms latency but eliminates cross-loop
+    failures completely.
+    """
+    worker_engine = create_async_engine(
+        settings.database_url.get_secret_value(),
+        echo=False,
+        poolclass=NullPool,
+    )
+    worker_session_factory = async_sessionmaker(
+        bind=worker_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autoflush=False,
+    )
+    try:
+        async with worker_session_factory() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+    finally:
+        await worker_engine.dispose()    
